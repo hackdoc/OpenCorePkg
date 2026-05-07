@@ -1075,22 +1075,39 @@ VOID
   ARM64E_KERNEL) layouts; returns 0 for any other format without
   walking.
 
+  All fields read from StartsSeg are treated as untrusted input. Every
+  computed offset and chain step is bounds-checked against the
+  caller-supplied container sizes. The walker never reads or invokes
+  Visitor on a slot that lies outside [Buffer, Buffer + BufferSize).
+  A self-referencing chain is bounded by the per-page iteration cap
+  PageSize / sizeof (UINT64).
+
   @param[in]     Buffer          Pointer to the containing kernel
                                  collection buffer (the same base
                                  SegmentOffset is relative to).
+  @param[in]     BufferSize      Size of Buffer in bytes. The walker
+                                 will not access Buffer past this.
   @param[in]     StartsSeg       MACH_DYLD_CHAINED_STARTS_IN_SEGMENT for
                                  the segment to walk.
+  @param[in]     StartsSegSize   Size of the metadata region pointed to
+                                 by StartsSeg. The walker will not read
+                                 the StartsSeg struct or its
+                                 PageStart[] array past this.
   @param[in]     Visitor         Callback invoked per fixup slot, or
                                  NULL to count only.
   @param[in,out] VisitorContext  Opaque context forwarded to Visitor,
                                  may be NULL.
 
-  @return  Count of fixup slots visited (0 if PointerFormat unsupported).
+  @return  Count of fixup slots visited. 0 if any size precondition
+           fails, the pointer format is unsupported, or the structure
+           is malformed.
 **/
 UINTN
 KcWalkChainedFixupsInSegment (
   IN     UINT8                                *Buffer,
+  IN     UINTN                                BufferSize,
   IN     MACH_DYLD_CHAINED_STARTS_IN_SEGMENT  *StartsSeg,
+  IN     UINTN                                StartsSegSize,
   IN     KC_CHAINED_FIXUP_VISIT               Visitor OPTIONAL,
   IN OUT VOID                                 *VisitorContext OPTIONAL
   );
@@ -1101,21 +1118,36 @@ KcWalkChainedFixupsInSegment (
   STARTS_IN_IMAGE table and calling KcWalkChainedFixupsInSegment for
   each populated segment.
 
+  Both the Starts table and each per-segment record it indexes are
+  treated as untrusted input and bounds-checked against StartsSize.
+  Per-segment validation is performed by KcWalkChainedFixupsInSegment.
+
   @param[in]     Buffer          Pointer to the containing kernel
                                  collection buffer.
+  @param[in]     BufferSize      Size of Buffer in bytes. Forwarded to
+                                 KcWalkChainedFixupsInSegment.
   @param[in]     Starts          MACH_DYLD_CHAINED_STARTS_IN_IMAGE for
                                  the whole image.
+  @param[in]     StartsSize      Size of the chained-fixups metadata
+                                 region pointed to by Starts. Bounds
+                                 the SegInfoOffset[] array reads and
+                                 each per-segment dereference.
   @param[in]     Visitor         Callback invoked per fixup slot, or
                                  NULL to count only.
   @param[in,out] VisitorContext  Opaque context forwarded to Visitor,
                                  may be NULL.
 
-  @return  Total count of fixup slots visited across all segments.
+  @return  Total count of fixup slots visited across all segments. 0
+           if a size precondition fails or the structure is malformed;
+           a malformed individual segment is skipped without affecting
+           other segments.
 **/
 UINTN
 KcWalkChainedFixupsInImage (
   IN     UINT8                              *Buffer,
+  IN     UINTN                              BufferSize,
   IN     MACH_DYLD_CHAINED_STARTS_IN_IMAGE  *Starts,
+  IN     UINTN                              StartsSize,
   IN     KC_CHAINED_FIXUP_VISIT             Visitor OPTIONAL,
   IN OUT VOID                               *VisitorContext OPTIONAL
   );

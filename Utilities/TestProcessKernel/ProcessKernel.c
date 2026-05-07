@@ -344,6 +344,7 @@ RunFixupWalkTest (
   MACH_DYLD_CHAINED_PTR_64_KERNEL_CACHE_REBASE  *Slot;
   UINTN                                         Count;
   UINTN                                         VisitedAddresses[8];
+  UINTN                                         ByteIdx;
   INT32                                         FailCount;
 
   FailCount = 0;
@@ -385,7 +386,9 @@ RunFixupWalkTest (
   ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
   Count = KcWalkChainedFixupsInSegment (
             Buffer,
+            TEST_FIXUP_BUFFER_SZ,
             StartsSeg,
+            sizeof (StartsBuffer),
             TestFixupVisitor,
             VisitedAddresses
             );
@@ -416,7 +419,9 @@ RunFixupWalkTest (
   ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
   Count = KcWalkChainedFixupsInSegment (
             Buffer,
+            TEST_FIXUP_BUFFER_SZ,
             StartsSeg,
+            sizeof (StartsBuffer),
             TestFixupVisitor,
             VisitedAddresses
             );
@@ -434,7 +439,9 @@ RunFixupWalkTest (
   ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
   Count = KcWalkChainedFixupsInSegment (
             Buffer,
+            TEST_FIXUP_BUFFER_SZ,
             StartsSeg,
+            sizeof (StartsBuffer),
             TestFixupVisitor,
             VisitedAddresses
             );
@@ -443,6 +450,202 @@ RunFixupWalkTest (
     ++FailCount;
   } else {
     DEBUG ((DEBUG_WARN, "[OK] unsupported-format guard returned 0\n"));
+  }
+
+  //
+  // Bounds-check tests. Each constructs a malformed StartsSeg and
+  // confirms the walker rejects it (returns 0, visits nothing) rather
+  // than reading or writing out of the supplied buffers.
+  //
+
+  //
+  // (a) PageCount lies about the array length. Buffer-of-record claims
+  //     200 pages but only ~1 entry of metadata is supplied; walker
+  //     must refuse rather than walk a UINT16 array off the end of
+  //     StartsBuffer.
+  //
+  StartsSeg->PointerFormat = MACH_DYLD_CHAINED_PTR_X86_64_KERNEL_CACHE;
+  StartsSeg->PageCount     = 200;
+  ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
+  Count = KcWalkChainedFixupsInSegment (
+            Buffer,
+            TEST_FIXUP_BUFFER_SZ,
+            StartsSeg,
+            sizeof (StartsBuffer),
+            TestFixupVisitor,
+            VisitedAddresses
+            );
+  if ((Count != 0) || (VisitedAddresses[0] != 0)) {
+    DEBUG ((DEBUG_ERROR, "[FAIL] PageCount oversize guard: %u fixups\n", (UINT32)Count));
+    ++FailCount;
+  } else {
+    DEBUG ((DEBUG_WARN, "[OK] PageCount oversize rejected\n"));
+  }
+
+  //
+  // (b) StartsSeg->Size > caller's StartsSegSize. Walker must refuse to
+  //     trust the larger self-declared size.
+  //
+  StartsSeg->PageCount = TEST_FIXUP_PAGE_COUNT;
+  StartsSeg->Size      = (UINT32)sizeof (StartsBuffer) + 64;
+  ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
+  Count = KcWalkChainedFixupsInSegment (
+            Buffer,
+            TEST_FIXUP_BUFFER_SZ,
+            StartsSeg,
+            sizeof (StartsBuffer),
+            TestFixupVisitor,
+            VisitedAddresses
+            );
+  if ((Count != 0) || (VisitedAddresses[0] != 0)) {
+    DEBUG ((DEBUG_ERROR, "[FAIL] Size > StartsSegSize guard: %u fixups\n", (UINT32)Count));
+    ++FailCount;
+  } else {
+    DEBUG ((DEBUG_WARN, "[OK] Size > StartsSegSize rejected\n"));
+  }
+
+  //
+  // (c) SegmentOffset past end of buffer. Walker must not deref past
+  //     Buffer + BufferSize even though Buffer itself is non-NULL.
+  //
+  StartsSeg->Size          = (UINT32)sizeof (StartsBuffer);
+  StartsSeg->SegmentOffset = TEST_FIXUP_BUFFER_SZ;
+  ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
+  Count = KcWalkChainedFixupsInSegment (
+            Buffer,
+            TEST_FIXUP_BUFFER_SZ,
+            StartsSeg,
+            sizeof (StartsBuffer),
+            TestFixupVisitor,
+            VisitedAddresses
+            );
+  if ((Count != 0) || (VisitedAddresses[0] != 0)) {
+    DEBUG ((DEBUG_ERROR, "[FAIL] SegmentOffset OOB guard: %u fixups\n", (UINT32)Count));
+    ++FailCount;
+  } else {
+    DEBUG ((DEBUG_WARN, "[OK] SegmentOffset out-of-buffer rejected\n"));
+  }
+
+  //
+  // (d) PageStart >= PageSize — chain head outside its own page. Page
+  //     is skipped; walker returns count 0 (nothing to visit).
+  //
+  StartsSeg->SegmentOffset = 0;
+  StartsSeg->PageStart[0]  = TEST_FIXUP_PAGE_SIZE;
+  ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
+  Count = KcWalkChainedFixupsInSegment (
+            Buffer,
+            TEST_FIXUP_BUFFER_SZ,
+            StartsSeg,
+            sizeof (StartsBuffer),
+            TestFixupVisitor,
+            VisitedAddresses
+            );
+  if ((Count != 0) || (VisitedAddresses[0] != 0)) {
+    DEBUG ((DEBUG_ERROR, "[FAIL] PageStart >= PageSize guard: %u fixups\n", (UINT32)Count));
+    ++FailCount;
+  } else {
+    DEBUG ((DEBUG_WARN, "[OK] PageStart >= PageSize rejected\n"));
+  }
+
+  //
+  // (e) Pathological chain: every 4-byte step reads as Next=1, so the
+  //     chain walks forward 4 bytes at a time and would visit
+  //     PageSize/4 = 1024 slots if unchecked. The iteration cap
+  //     (PageSize / sizeof(UINT64) = 512) must stop it short.
+  //
+  // Pattern: set byte i = 0x08 for i = 6, 10, 14, ..., so that the
+  // 8-byte read at every 4-byte-aligned offset has bit 51 set and all
+  // other Next-field bits clear, decoding to Next = 1. The
+  // MACH_DYLD_CHAINED_PTR_64_KERNEL_CACHE_REBASE bitfield places Next
+  // at bits 51-62 of the 64-bit slot (Apple mach-o/fixup-chains.h).
+  //
+  ZeroMem (Buffer, TEST_FIXUP_BUFFER_SZ);
+  for (ByteIdx = 6; ByteIdx + 1 < TEST_FIXUP_BUFFER_SZ; ByteIdx += 4) {
+    Buffer[ByteIdx] = 0x08;
+  }
+
+  StartsSeg->PointerFormat = MACH_DYLD_CHAINED_PTR_64_KERNEL_CACHE;
+  StartsSeg->PageStart[0]  = 0;
+  ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
+  Count = KcWalkChainedFixupsInSegment (
+            Buffer,
+            TEST_FIXUP_BUFFER_SZ,
+            StartsSeg,
+            sizeof (StartsBuffer),
+            TestFixupVisitor,
+            VisitedAddresses
+            );
+  //
+  // Cap is PageSize / sizeof(UINT64) = 0x1000 / 8 = 512.
+  // Walker must stop at exactly that count rather than walking 1024.
+  //
+  if (Count != TEST_FIXUP_PAGE_SIZE / sizeof (UINT64)) {
+    DEBUG ((DEBUG_ERROR, "[FAIL] iter cap: %u fixups (expected %u)\n", (UINT32)Count, (UINT32)(TEST_FIXUP_PAGE_SIZE / sizeof (UINT64))));
+    ++FailCount;
+  } else {
+    DEBUG ((DEBUG_WARN, "[OK] long-chain bounded at iteration cap (%u)\n", (UINT32)Count));
+  }
+
+  //
+  // (f) Chain step would walk off the end of its page. Walker must
+  //     stop before reading past the page boundary.
+  //
+  StartsSeg->PageStart[0] = (UINT16)(TEST_FIXUP_PAGE_SIZE - sizeof (UINT64));
+  Slot                    = (MACH_DYLD_CHAINED_PTR_64_KERNEL_CACHE_REBASE *)
+                            (Buffer + (TEST_FIXUP_PAGE_SIZE - sizeof (UINT64)));
+  ZeroMem (Slot, sizeof (*Slot));
+  Slot[0].Next   = 64;      // would step past the page end
+  Slot[0].Target = 0xFFFF;
+
+  ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
+  Count = KcWalkChainedFixupsInSegment (
+            Buffer,
+            TEST_FIXUP_BUFFER_SZ,
+            StartsSeg,
+            sizeof (StartsBuffer),
+            TestFixupVisitor,
+            VisitedAddresses
+            );
+  //
+  // The starting slot is in-page, so it's visited once; the next step
+  // is rejected and the walk terminates.
+  //
+  if ((Count != 1) || (VisitedAddresses[0] != 1)) {
+    DEBUG ((DEBUG_ERROR, "[FAIL] off-page chain step guard: %u fixups\n", (UINT32)Count));
+    ++FailCount;
+  } else {
+    DEBUG ((DEBUG_WARN, "[OK] chain step past page-end rejected after 1 visit\n"));
+  }
+
+  //
+  // (g) Image-level walker: NumSegments lies. Walker must validate
+  //     against StartsSize and return 0 cleanly.
+  //
+  {
+    UINT8                              ImageStartsBuffer[sizeof (MACH_DYLD_CHAINED_STARTS_IN_IMAGE) + sizeof (UINT32)];
+    MACH_DYLD_CHAINED_STARTS_IN_IMAGE  *ImageStarts;
+
+    ZeroMem (ImageStartsBuffer, sizeof (ImageStartsBuffer));
+    ImageStarts                  = (MACH_DYLD_CHAINED_STARTS_IN_IMAGE *)ImageStartsBuffer;
+    ImageStarts->NumSegments     = 1000;
+    ImageStarts->SegInfoOffset[0] = 0;
+
+    ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
+    Count = KcWalkChainedFixupsInImage (
+              Buffer,
+              TEST_FIXUP_BUFFER_SZ,
+              ImageStarts,
+              sizeof (ImageStartsBuffer),
+              TestFixupVisitor,
+              VisitedAddresses
+              );
+    if ((Count != 0) || (VisitedAddresses[0] != 0)) {
+      DEBUG ((DEBUG_ERROR, "[FAIL] InImage NumSegments guard: %u fixups\n", (UINT32)Count));
+      ++FailCount;
+    } else {
+      DEBUG ((DEBUG_WARN, "[OK] InImage oversize NumSegments rejected\n"));
+    }
   }
 
   FreePool (Buffer);
