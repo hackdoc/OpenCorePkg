@@ -627,8 +627,8 @@ RunFixupWalkTest (
     MACH_DYLD_CHAINED_STARTS_IN_IMAGE  *ImageStarts;
 
     ZeroMem (ImageStartsBuffer, sizeof (ImageStartsBuffer));
-    ImageStarts                  = (MACH_DYLD_CHAINED_STARTS_IN_IMAGE *)ImageStartsBuffer;
-    ImageStarts->NumSegments     = 1000;
+    ImageStarts                   = (MACH_DYLD_CHAINED_STARTS_IN_IMAGE *)ImageStartsBuffer;
+    ImageStarts->NumSegments      = 1000;
     ImageStarts->SegInfoOffset[0] = 0;
 
     ZeroMem (VisitedAddresses, sizeof (VisitedAddresses));
