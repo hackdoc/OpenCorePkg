@@ -175,7 +175,7 @@ OcLoadPickerHotKeys (
   HasZero    = OcKeyMapHasKey (Keys, NumKeys, AppleHidUsbKbUsageKeyZero);
   HasKeyR    = OcKeyMapHasKey (Keys, NumKeys, AppleHidUsbKbUsageKeyR);
   HasKeyP    = OcKeyMapHasKey (Keys, NumKeys, AppleHidUsbKbUsageKeyP);
-  HasShift  = (Modifiers & APPLE_MODIFIERS_SHIFT) != 0;
+  HasShift   = (Modifiers & APPLE_MODIFIERS_SHIFT) != 0;
   HasKeyX    = OcKeyMapHasKey (Keys, NumKeys, AppleHidUsbKbUsageKeyX);
 
   if (HasCommand && HasKeyR && !HasShift && !HasOption && !HasKeyP) {
