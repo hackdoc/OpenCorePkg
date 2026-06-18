@@ -178,7 +178,7 @@ OcLoadPickerHotKeys (
   HasShift  = (Modifiers & APPLE_MODIFIERS_SHIFT) != 0;
   HasKeyX    = OcKeyMapHasKey (Keys, NumKeys, AppleHidUsbKbUsageKeyX);
 
-  if (HasCommand && HasKeyR && not HasShift && not HasOption && not HasKeyP) {
+  if (HasCommand && HasKeyR && !HasShift && !HasOption && !HasKeyP) {
     DEBUG ((DEBUG_INFO, "OCHK: CMD+R causes recovery to boot\n"));
     Context->PickerCommand = OcPickerBootAppleRecovery;
   } else if (HasKeyX) {
