@@ -185,6 +185,7 @@
 
   !include NetworkPkg/NetworkLibs.dsc.inc
 
+  HttpIoLib|NetworkPkg/Library/DxeHttpIoLib/DxeHttpIoLib.inf
   HttpLib|NetworkPkg/Library/DxeHttpLib/DxeHttpLib.inf
 
   !include Ext4Pkg/Ext4Defines.dsc.inc
@@ -316,6 +317,7 @@
   OpenCorePkg/Platform/OpenCanopy/OpenCanopy.inf
   OpenCorePkg/Platform/OpenLegacyBoot/OpenLegacyBoot.inf
   OpenCorePkg/Platform/OpenLinuxBoot/OpenLinuxBoot.inf
+  OpenCorePkg/Platform/OpenInternetRecovery/OpenInternetRecovery.inf
   OpenCorePkg/Platform/OpenNetworkBoot/OpenNetworkBoot.inf
   OpenCorePkg/Platform/OpenNtfsDxe/OpenNtfsDxe.inf
   OpenCorePkg/Platform/OpenPartitionDxe/PartitionDxe.inf

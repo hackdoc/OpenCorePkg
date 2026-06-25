@@ -532,7 +532,7 @@ InternalUnloadDmg (
       DmgLoadContext->DmgContext,
       DmgLoadContext->BlockIoHandle
       );
-    OcAppleDiskImageFreeContext (DmgLoadContext->DmgContext);
+    OcAppleDiskImageFreeFile (DmgLoadContext->DmgContext);
     FreePool (DmgLoadContext->DmgContext);
     DmgLoadContext->DevicePath = NULL;
     //

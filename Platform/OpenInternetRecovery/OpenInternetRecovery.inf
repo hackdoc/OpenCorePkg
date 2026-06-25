@@ -1,0 +1,63 @@
+## @file
+#  Boot entry protocol handler for Apple Internet Recovery.
+#
+#  Copyright (C) 2026, Ghltbm. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-3-Clause
+##
+
+[Defines]
+  INF_VERSION    = 0x00010005
+  BASE_NAME      = OpenInternetRecovery
+  ENTRY_POINT    = UefiMain
+  FILE_GUID      = 95D8EAC9-081A-4568-9C8B-CB74C00FA063
+  MODULE_TYPE    = UEFI_DRIVER
+  VERSION_STRING = 1.0
+
+[Packages]
+  OpenCorePkg/OpenCorePkg.dec
+  MdePkg/MdePkg.dec
+  NetworkPkg/NetworkPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  HttpIoLib
+  MemoryAllocationLib
+  NetLib
+  OcAppleChunklistLib
+  OcAppleDiskImageLib
+  OcAppleKeysLib
+  OcAppleRamDiskLib
+  OcBootManagementLib
+  OcConsoleLib
+  OcCryptoLib
+  OcFileLib
+  OcFlexArrayLib
+  OcStringLib
+  PrintLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+  UefiRuntimeServicesTableLib
+
+[Protocols]
+  gEfiHttpProtocolGuid                 ## CONSUMES
+  gEfiHttpServiceBindingProtocolGuid   ## CONSUMES
+  gEfiSimpleNetworkProtocolGuid        ## CONSUMES
+  gEfiTcp4ServiceBindingProtocolGuid   ## CONSUMES
+  gEfiTcp6ServiceBindingProtocolGuid   ## CONSUMES
+  gOcBootEntryProtocolGuid             ## PRODUCES
+
+[Guids]
+  gAppleVendorVariableGuid             ## SOMETIMES_CONSUMES
+
+[Sources]
+  InternetRecoveryInternal.h
+  OpenInternetRecovery.c
+  RecoveryChunklist.c
+  RecoveryNetwork.c
+  RecoveryRamDisk.c
+  RecoverySession.c
+  RecoverySmbios.c
