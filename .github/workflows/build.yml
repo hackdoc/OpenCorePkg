@@ -17,8 +17,9 @@ env:
 jobs:
   build-macos:
     name: macOS XCODE5
-    runs-on: macos-latest
+    runs-on: macos-26
     env:
+      DEVELOPER_DIR: /Applications/Xcode_26.app/Contents/Developer
       JOB_TYPE: BUILD
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       HOMEBREW_NO_AUTO_UPDATE: 1

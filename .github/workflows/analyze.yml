@@ -13,8 +13,9 @@ env:
 jobs:
   analyze-shell-scripts:
     name: Shell Scripts
-    runs-on: macos-latest
+    runs-on: macos-26
     env:
+      DEVELOPER_DIR: /Applications/Xcode_26.app/Contents/Developer
       JOB_TYPE: ANALYZE
       HOMEBREW_NO_INSTALL_CLEANUP: 1
     steps:
