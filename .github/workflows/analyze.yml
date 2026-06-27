@@ -32,6 +32,9 @@ jobs:
       - name: CI Bootstrap
         run: |
           src=$(/usr/bin/curl -LfsS https://raw.githubusercontent.com/acidanthera/ocbuild/master/ci-bootstrap.sh) && eval "$src" || exit 1
+          echo "DEVELOPER_DIR=/Applications/Xcode_26.app/Contents/Developer" >> "$GITHUB_ENV"
+          export DEVELOPER_DIR=/Applications/Xcode_26.app/Contents/Developer
+          xcode-select --print-path
 
       - name: Run shellcheck
         run: find . \( -name "*.tool" -o -name "*.command" -o -name "*.sh" \) -exec sh -c 'for TargetFile; do shellcheck --severity=info "${TargetFile}" || exit 1; done' sh {} +
