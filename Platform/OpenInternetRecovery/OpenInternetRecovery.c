@@ -89,7 +89,7 @@ InternetRecoveryCustomRead (
   *StorageHandle = NULL;
   *StoragePath   = NULL;
   ZeroMem (DmgPreloadContext, sizeof (*DmgPreloadContext));
-  *Context       = NULL;
+  *Context = NULL;
 
   EntryContext = InternalGetEntryContext (ChosenEntry);
   if (EntryContext == NULL) {
@@ -189,39 +189,39 @@ InternetRecoveryCustomRead (
 
   FreeContext->DmgContextTransferred = TRUE;
   FreeContext->ChunklistTransferred  = TRUE;
-  *Context = FreeContext;
+  *Context                           = FreeContext;
 
   return EFI_SUCCESS;
 }
 
 STATIC OC_PICKER_ENTRY  mInternetRecoveryBootEntries[2] = {
   {
-    .Id                  = OIR_LATEST_ID,
-    .Name                = OIR_LATEST_NAME,
-    .Path                = OIR_RECOVERY_PATH,
-    .Arguments           = NULL,
-    .Flavour             = OC_FLAVOUR_APPLE_RECOVERY,
-    .Auxiliary           = TRUE,
-    .Tool                = FALSE,
-    .TextMode            = TRUE,
-    .RealPath            = FALSE,
-    .CustomRead          = InternetRecoveryCustomRead,
-    .CustomFree          = InternetRecoveryCustomFree,
-    .External            = TRUE
+    .Id         = OIR_LATEST_ID,
+    .Name       = OIR_LATEST_NAME,
+    .Path       = OIR_RECOVERY_PATH,
+    .Arguments  = NULL,
+    .Flavour    = OC_FLAVOUR_APPLE_RECOVERY,
+    .Auxiliary  = TRUE,
+    .Tool       = FALSE,
+    .TextMode   = TRUE,
+    .RealPath   = FALSE,
+    .CustomRead = InternetRecoveryCustomRead,
+    .CustomFree = InternetRecoveryCustomFree,
+    .External   = TRUE
   },
   {
-    .Id                  = OIR_OLDEST_ID,
-    .Name                = OIR_OLDEST_NAME,
-    .Path                = OIR_RECOVERY_PATH,
-    .Arguments           = NULL,
-    .Flavour             = OC_FLAVOUR_APPLE_RECOVERY,
-    .Auxiliary           = TRUE,
-    .Tool                = FALSE,
-    .TextMode            = TRUE,
-    .RealPath            = FALSE,
-    .CustomRead          = InternetRecoveryCustomRead,
-    .CustomFree          = InternetRecoveryCustomFree,
-    .External            = TRUE
+    .Id         = OIR_OLDEST_ID,
+    .Name       = OIR_OLDEST_NAME,
+    .Path       = OIR_RECOVERY_PATH,
+    .Arguments  = NULL,
+    .Flavour    = OC_FLAVOUR_APPLE_RECOVERY,
+    .Auxiliary  = TRUE,
+    .Tool       = FALSE,
+    .TextMode   = TRUE,
+    .RealPath   = FALSE,
+    .CustomRead = InternetRecoveryCustomRead,
+    .CustomFree = InternetRecoveryCustomFree,
+    .External   = TRUE
   }
 };
 

@@ -347,7 +347,7 @@ OirHttpRequestEx (
     return Status;
   }
 
-  HeaderCount = 0;
+  HeaderCount                     = 0;
   Headers[HeaderCount].FieldName  = "Host";
   Headers[HeaderCount].FieldValue = Host;
   ++HeaderCount;
@@ -475,22 +475,22 @@ OirHttpDownloadToRamDisk (
   OUT    UINTN                              *DownloadSize
   )
 {
-  EFI_STATUS             Status;
-  HTTP_IO                HttpIo;
-  HTTP_IO_CONFIG_DATA    ConfigData;
-  EFI_HTTP_REQUEST_DATA  Request;
-  EFI_HANDLE             *HandleBuffer;
-  UINTN                  HandleCount;
-  CHAR16                 *UnicodeUrl;
-  CHAR8                  Host[128];
-  EFI_HTTP_HEADER        Headers[4];
-  UINTN                  HeaderCount;
-  HTTP_IO_RESPONSE_DATA  ResponseData;
-  UINTN                  ContentLength;
-  UINTN                  ResponseHeaderCount;
-  EFI_HTTP_HEADER        *ResponseHeaders;
-  UINT8                  *ChunkBuffer;
-  UINTN                  Offset;
+  EFI_STATUS                         Status;
+  HTTP_IO                            HttpIo;
+  HTTP_IO_CONFIG_DATA                ConfigData;
+  EFI_HTTP_REQUEST_DATA              Request;
+  EFI_HANDLE                         *HandleBuffer;
+  UINTN                              HandleCount;
+  CHAR16                             *UnicodeUrl;
+  CHAR8                              Host[128];
+  EFI_HTTP_HEADER                    Headers[4];
+  UINTN                              HeaderCount;
+  HTTP_IO_RESPONSE_DATA              ResponseData;
+  UINTN                              ContentLength;
+  UINTN                              ResponseHeaderCount;
+  EFI_HTTP_HEADER                    *ResponseHeaders;
+  UINT8                              *ChunkBuffer;
+  UINTN                              Offset;
   CONST APPLE_RAM_DISK_EXTENT_TABLE  *RamDisk;
 
   if ((Url == NULL) || (ExtentTable == NULL) || (DownloadSize == NULL)) {
@@ -504,9 +504,9 @@ OirHttpDownloadToRamDisk (
   ZeroMem (&Request, sizeof (Request));
   ZeroMem (&ResponseData, sizeof (ResponseData));
 
-  HandleBuffer = NULL;
-  HandleCount  = 0;
-  UnicodeUrl   = NULL;
+  HandleBuffer        = NULL;
+  HandleCount         = 0;
+  UnicodeUrl          = NULL;
   ChunkBuffer         = NULL;
   RamDisk             = NULL;
   ResponseHeaderCount = 0;
@@ -552,7 +552,7 @@ OirHttpDownloadToRamDisk (
     goto Done;
   }
 
-  HeaderCount = 0;
+  HeaderCount                     = 0;
   Headers[HeaderCount].FieldName  = "Host";
   Headers[HeaderCount].FieldValue = Host;
   ++HeaderCount;
@@ -587,8 +587,8 @@ OirHttpDownloadToRamDisk (
     goto Done;
   }
 
-  ResponseHeaderCount = ResponseData.HeaderCount;
-  ResponseHeaders     = ResponseData.Headers;
+  ResponseHeaderCount  = ResponseData.HeaderCount;
+  ResponseHeaders      = ResponseData.Headers;
   ResponseData.Headers = NULL;
 
   Status = InternalGetContentLength (ResponseHeaderCount, ResponseHeaders, &ContentLength);

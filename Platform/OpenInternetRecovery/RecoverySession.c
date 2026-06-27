@@ -23,7 +23,7 @@ InternalGenerateHex (
   ZeroMem (&Time, sizeof (Time));
   gRT->GetTime (&Time, NULL);
 
-  State = AsmReadTsc ();
+  State  = AsmReadTsc ();
   State ^= LShiftU64 ((UINT64)Time.Year, 48);
   State ^= LShiftU64 ((UINT64)Time.Month, 40);
   State ^= LShiftU64 ((UINT64)Time.Day, 32);
@@ -32,7 +32,7 @@ InternalGenerateHex (
   State ^= LShiftU64 ((UINT64)Time.Second, 8);
 
   for (Index = 0; Index < Length; ++Index) {
-    State = MultU64x64 (State, 6364136223846793005ULL) + 1442695040888963407ULL;
+    State         = MultU64x64 (State, 6364136223846793005ULL) + 1442695040888963407ULL;
     Buffer[Index] = "0123456789ABCDEF"[(State >> 60) & 0xF];
   }
 
@@ -134,12 +134,12 @@ InternalParseImageInfo (
   OUT OIR_IMAGE_INFO  *ImageInfo
   )
 {
-  UINTN       Offset;
-  UINTN       LineStart;
-  UINTN       LineEnd;
-  UINTN       KeyLength;
-  CONST CHAR8 *Value;
-  CHAR8       Key[3];
+  UINTN        Offset;
+  UINTN        LineStart;
+  UINTN        LineEnd;
+  UINTN        KeyLength;
+  CONST CHAR8  *Value;
+  CHAR8        Key[3];
 
   ASSERT (Body != NULL);
   ASSERT (ImageInfo != NULL);
@@ -193,9 +193,9 @@ InternalParseImageInfo (
 
 EFI_STATUS
 OirGetRecoveryImageInfo (
-  IN  OIR_RECOVERY_MODE         Mode,
-  IN  CONST OIR_PLATFORM_INFO   *PlatformInfo,
-  OUT OIR_IMAGE_INFO            *ImageInfo
+  IN  OIR_RECOVERY_MODE        Mode,
+  IN  CONST OIR_PLATFORM_INFO  *PlatformInfo,
+  OUT OIR_IMAGE_INFO           *ImageInfo
   )
 {
   EFI_STATUS  Status;
