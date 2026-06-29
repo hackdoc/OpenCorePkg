@@ -205,6 +205,7 @@ package() {
       "OpenLegacyBoot.efi"
       "OpenLinuxBoot.efi"
       "OpenNetworkBoot.efi"
+      "OpenInternetRecovery.efi"
       "OpenNtfsDxe.efi"
       "OpenPartitionDxe.efi"
       "OpenRuntime.efi"
